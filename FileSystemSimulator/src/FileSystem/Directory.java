@@ -50,10 +50,20 @@ public class Directory {
 
     @Override
     public String toString() {
-        return "Directory{" +
-                "name='" + name + '\'' +
-                ", files=" + files.size() +
-                ", subDirs=" + subDirs.size() +
-                '}';
+        return "Directory{"
+                + "name='" + name + '\''
+                + ", files=" + files.size()
+                + ", subDirs=" + subDirs.size()
+                + '}';
+    }
+
+    public File findFile(String name) {
+        for (int i = 0; i < files.size(); i++) {
+            File f = files.get(i);
+            if (f.getName().equals(name)) {
+                return f;
+            }
+        }
+        return null;
     }
 }

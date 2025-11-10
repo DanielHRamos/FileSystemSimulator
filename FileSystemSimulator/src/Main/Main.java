@@ -4,31 +4,35 @@
  */
 package Main;
 
+import Disk.DiskSimulator;
+import FileSystem.FileSystemManager;
 import Process.MyProcess;
 import Process.ProcessManager;
+import SchedulerManagement.FIFOScheduler;
+
+
 
 /**
  *
  * @author Daniel
  */
 
+
 public class Main {
     public static void main(String[] args) {
-        ProcessManager pm = new ProcessManager();
+        DiskSimulator disk = new DiskSimulator(20);
+        FileSystemManager fs = new FileSystemManager(disk);
 
-        // Crear procesos CRUD simulados
-        MyProcess p1 = new MyProcess("daniel", "CREATE", "doc1.txt");
-        MyProcess p2 = new MyProcess("daniel", "DELETE", "doc1.txt");
+        ProcessManager pm = new ProcessManager(new FIFOScheduler(), fs, 0);
 
-        // Agregar a la cola
-        pm.addProcess(p1);
-        pm.addProcess(p2);
+        pm.addProcess(new MyProcess("daniel", "CREATE", "doc1.txt", 7));
+        pm.addProcess(new MyProcess("daniel", "DELETE", "doc1.txt", 7));
 
-        // Ejecutar procesos en orden FIFO
         while (pm.hasProcesses()) {
             MyProcess running = pm.nextProcess();
-            // Aquí podrías simular la operación real (ej: llamar a FileSystemManager)
             pm.terminateProcess(running);
         }
+
+        fs.listCurrentDirectory();
     }
 }

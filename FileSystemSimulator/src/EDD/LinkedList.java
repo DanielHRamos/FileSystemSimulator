@@ -13,7 +13,7 @@ public class LinkedList<T> {
     private Node<T> head;
     private int size;
 
-    // Clase interna Node
+   
     private static class Node<T> {
 
         T data;
@@ -41,6 +41,31 @@ public class LinkedList<T> {
             }
             current.next = newNode;
         }
+        size++;
+    }
+
+    public void addAt(int index, T data) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException("Indice fuera de rango: " + index);
+        }
+
+        Node<T> newNode = new Node<>(data);
+
+        if (index == 0) {
+            
+            newNode.next = head;
+            head = newNode;
+            
+        } else {
+           
+            Node<T> current = head;
+            for (int i = 0; i < index - 1; i++) {
+                current = current.next;
+            }
+            newNode.next = current.next;
+            current.next = newNode;
+        }
+
         size++;
     }
 

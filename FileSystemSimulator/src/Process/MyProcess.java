@@ -10,23 +10,23 @@ package Process;
  */
 public class MyProcess {
 
-    private static int nextId = 1;   // contador global para asignar IDs
+    private static int nextId = 1;
+    private int pid;
+    private String owner;
+    private String operation;
+    private String target;
+    private ProcessState state;
+    private int targetBlock;
 
-    private final int pid;           // identificador único
-    private String owner;            // usuario que lo creó
-    private String operation;        // tipo de operación (CREATE, READ, UPDATE, DELETE)
-    private String target;           // archivo/directorio objetivo
-    private ProcessState state;      // estado actual
-
-    public MyProcess(String owner, String operation, String target) {
+    public MyProcess(String owner, String operation, String target, int targetBlock) {
         this.pid = nextId++;
         this.owner = owner;
         this.operation = operation;
         this.target = target;
         this.state = ProcessState.NEW;
+        this.targetBlock = targetBlock;
     }
 
-    // --- Getters y Setters ---
     public int getPid() {
         return pid;
     }
@@ -51,14 +51,18 @@ public class MyProcess {
         this.state = state;
     }
 
+    public int getTargetBlock() {
+        return targetBlock;
+    }
+
     @Override
     public String toString() {
-        return "Process{" +
-                "pid=" + pid +
-                ", owner='" + owner + '\'' +
-                ", operation='" + operation + '\'' +
-                ", target='" + target + '\'' +
-                ", state=" + state +
-                '}';
+        return "Process{"
+                + "pid=" + pid
+                + ", owner='" + owner + '\''
+                + ", operation='" + operation + '\''
+                + ", target='" + target + '\''
+                + ", state=" + state
+                + '}';
     }
 }
