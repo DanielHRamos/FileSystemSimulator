@@ -5,6 +5,7 @@
 package Main;
 
 import Disk.DiskSimulator;
+import EDD.LinkedList;
 import FileSystem.FileSystemManager;
 import Process.MyProcess;
 import Process.ProcessManager;
@@ -25,14 +26,18 @@ public class Main {
 
         ProcessManager pm = new ProcessManager(new FIFOScheduler(), fs, 0);
 
+        LinkedList<MyProcess> ejecutados = new LinkedList<>();
+
         pm.addProcess(new MyProcess("daniel", "CREATE", "doc1.txt", 7));
+        pm.addProcess(new MyProcess("daniel", "READ", "doc1.txt", 7));
+        pm.addProcess(new MyProcess("daniel", "UPDATE", "doc1.txt", 7));
         pm.addProcess(new MyProcess("daniel", "DELETE", "doc1.txt", 7));
 
         while (pm.hasProcesses()) {
             MyProcess running = pm.nextProcess();
-            pm.terminateProcess(running);
+            ejecutados.add(running);
         }
 
-        fs.listCurrentDirectory();
+        pm.printMetrics(ejecutados);
     }
 }

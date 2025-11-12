@@ -11,72 +11,54 @@ import EDD.LinkedList;
  * @author Daniel
  */
 public class DiskSimulator {
-
-    private final Block[] blocks;   // Arreglo de bloques
-    private final int totalBlocks;
+    private boolean[] blocks;
 
     public DiskSimulator(int totalBlocks) {
-        this.totalBlocks = totalBlocks;
-        this.blocks = new Block[totalBlocks];
-        for (int i = 0; i < totalBlocks; i++) {
-            blocks[i] = new Block(i);
-        }
+        blocks = new boolean[totalBlocks];
     }
 
-    public Block allocate(String fileName, int size) {
-        LinkedList<Block> freeBlocks = getFreeBlocks();
-        if (freeBlocks.size() < size) {
-            System.out.println("No hay espacio suficiente en disco.");
-            return null;
-        }
-
-        Block first = null;
-        Block prev = null;
-
-        for (int i = 0; i < size; i++) {
-            Block current = freeBlocks.get(i); 
-            current.setOcupado(true, fileName);
-
-            if (first == null) {
-                first = current;
+    public int allocate(int size) {
+        for (int i = 0; i <= blocks.length - size; i++) {
+            boolean libre = true;
+            for (int j = 0; j < size; j++) {
+                if (blocks[i + j]) {
+                    libre = false;
+                    break;
+                }
             }
-            if (prev != null) {
-                prev.setNext(current);
-            }
-            prev = current;
-        }
-
-        return first;
-    }
-
-   
-    public void free(Block start) {
-        Block current = start;
-        while (current != null) {
-            current.setOcupado(false, null);
-            Block next = current.getNext();
-            current.setNext(null); // romper la cadena
-            current = next;
-        }
-    }
-
-    
-    public LinkedList<Block> getFreeBlocks() {
-        LinkedList<Block> libres = new LinkedList<>();
-        for (Block b : blocks) {
-            if (!b.isOcupado()) {
-                libres.add(b);
+            if (libre) {
+                for (int j = 0; j < size; j++) {
+                    blocks[i + j] = true;
+                }
+                return i; // bloque inicial reservado
             }
         }
-        return libres;
+        return -1; // no hay espacio suficiente
     }
 
-    
-    public Block[] getBlocks() {
-        return blocks;
+    /**
+     * Libera un rango de bloques.
+     * @param start bloque inicial
+     * @param size cantidad de bloques a liberar
+     */
+    public void free(int start, int size) {
+        for (int i = start; i < start + size && i < blocks.length; i++) {
+            blocks[i] = false;
+        }
+    }
+
+    /**
+     * Muestra el estado del disco en consola.
+     */
+    public void printStatus() {
+        System.out.print("Estado del disco: ");
+        for (boolean b : blocks) {
+            System.out.print(b ? "[X]" : "[ ]");
+        }
+        System.out.println();
     }
 
     public int getTotalBlocks() {
-        return totalBlocks;
+        return blocks.length;
     }
 }

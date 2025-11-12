@@ -11,11 +11,10 @@ import EDD.LinkedList;
  * @author Daniel
  */
 public class Directory {
-
     private String name;
-    private LinkedList<File> files;          // archivos dentro del directorio
-    private LinkedList<Directory> subDirs;   // subdirectorios
-    private Directory parent;                // referencia al directorio padre
+    private Directory parent;
+    private LinkedList<File> files;
+    private LinkedList<Directory> subDirs;
 
     public Directory(String name, Directory parent) {
         this.name = name;
@@ -24,46 +23,50 @@ public class Directory {
         this.subDirs = new LinkedList<>();
     }
 
-    public String getName() {
-        return name;
+    public String getName() { return name; }
+    public Directory getParent() { return parent; }
+    public LinkedList<File> getFiles() { return files; }
+    public LinkedList<Directory> getSubDirs() { return subDirs; }
+
+    public void addFile(File f) {
+        files.add(f);
     }
 
-    public Directory getParent() {
-        return parent;
+    public void removeFile(File f) {
+        files.remove(f);
     }
 
-    public LinkedList<File> getFiles() {
-        return files;
+    public void addDirectory(Directory d) {
+        subDirs.add(d);
     }
 
-    public LinkedList<Directory> getSubDirs() {
-        return subDirs;
+    public void removeDirectory(Directory d) {
+        subDirs.remove(d);
     }
 
-    public void addFile(File file) {
-        files.add(file);
-    }
-
-    public void addSubDir(Directory dir) {
-        subDirs.add(dir);
-    }
-
-    @Override
-    public String toString() {
-        return "Directory{"
-                + "name='" + name + '\''
-                + ", files=" + files.size()
-                + ", subDirs=" + subDirs.size()
-                + '}';
-    }
-
+    /**
+     * Busca un archivo por nombre en este directorio.
+     */
     public File findFile(String name) {
         for (int i = 0; i < files.size(); i++) {
             File f = files.get(i);
-            if (f.getName().equals(name)) {
-                return f;
-            }
+            if (f.getName().equals(name)) return f;
         }
         return null;
+    }
+
+    /**
+     * Lista el contenido del directorio.
+     */
+    public void listContents() {
+        System.out.println("Directorio: " + name);
+        System.out.println("Archivos:");
+        for (int i = 0; i < files.size(); i++) {
+            System.out.println("  " + files.get(i));
+        }
+        System.out.println("Subdirectorios:");
+        for (int i = 0; i < subDirs.size(); i++) {
+            System.out.println("  " + subDirs.get(i).getName());
+        }
     }
 }

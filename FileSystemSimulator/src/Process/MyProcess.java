@@ -18,6 +18,13 @@ public class MyProcess {
     private ProcessState state;
     private int targetBlock;
 
+    // Métricas
+    private int arrivalTime;     // cuando se agregó a la cola
+    private int startTime;       // cuando comenzó a ejecutarse
+    private int finishTime;      // cuando terminó
+    private int waitTime;        // tiempo en READY
+    private int turnaroundTime;  // tiempo total desde NEW hasta TERMINATED
+
     public MyProcess(String owner, String operation, String target, int targetBlock) {
         this.pid = nextId++;
         this.owner = owner;
@@ -25,8 +32,10 @@ public class MyProcess {
         this.target = target;
         this.state = ProcessState.NEW;
         this.targetBlock = targetBlock;
+        this.arrivalTime = (int) System.currentTimeMillis(); // simulación simple
     }
 
+    // Getters y setters
     public int getPid() {
         return pid;
     }
@@ -55,6 +64,24 @@ public class MyProcess {
         return targetBlock;
     }
 
+    public void setStartTime(int t) {
+        this.startTime = t;
+    }
+
+    public void setFinishTime(int t) {
+        this.finishTime = t;
+        this.turnaroundTime = finishTime - arrivalTime;
+        this.waitTime = startTime - arrivalTime;
+    }
+
+    public int getWaitTime() {
+        return waitTime;
+    }
+
+    public int getTurnaroundTime() {
+        return turnaroundTime;
+    }
+
     @Override
     public String toString() {
         return "Process{"
@@ -63,6 +90,8 @@ public class MyProcess {
                 + ", operation='" + operation + '\''
                 + ", target='" + target + '\''
                 + ", state=" + state
+                + ", wait=" + waitTime
+                + ", turnaround=" + turnaroundTime
                 + '}';
     }
 }

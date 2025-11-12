@@ -4,63 +4,43 @@
  */
 package FileSystem;
 
-import Disk.Block;
+
 
 /**
  *
  * @author Daniel
  */
 public class File {
-
     private String name;
-    private int size;          // tamaño en bloques
-    private Block firstBlock;  // referencia al primer bloque encadenado
-    private String owner;      // usuario que lo creó
-    private boolean isPublic;  // permisos básicos (público/privado)
+    private int size;
+    private int startBlock;
+    private boolean isText;
 
-    public File(String name, int size, String owner, boolean isPublic) {
+    public File(String name, int size, int startBlock, boolean isText) {
         this.name = name;
         this.size = size;
-        this.owner = owner;
-        this.isPublic = isPublic;
-        this.firstBlock = null; // se asigna al crearlo en DiskSimulator
+        this.startBlock = startBlock;
+        this.isText = isText;
     }
 
-    // --- Getters y Setters ---
-    public String getName() {
-        return name;
+    public String getName() { 
+        return name; 
     }
-
-    public void setName(String newName) {
-        this.name = newName;
+    
+    public int getSize() { 
+        return size; 
     }
-
-    public int getSize() {
-        return size;
+    
+    public void setSize(int size) { 
+        this.size = size; 
     }
-
-    public void setSize(int size) {
-        this.size = size;
+    
+    public int getStartBlock() { 
+        return startBlock; 
     }
-
-    public Block getFirstBlock() {
-        return firstBlock;
-    }
-
-    public void setFirstBlock(Block firstBlock) {
-        this.firstBlock = firstBlock;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public void setPublic(boolean isPublic) {
-        this.isPublic = isPublic;
+    
+    public boolean isText() { 
+        return isText; 
     }
 
     @Override
@@ -68,9 +48,8 @@ public class File {
         return "File{" +
                 "name='" + name + '\'' +
                 ", size=" + size +
-                ", owner='" + owner + '\'' +
-                ", public=" + isPublic +
-                ", firstBlock=" + (firstBlock != null ? firstBlock.getId() : "null") +
+                ", startBlock=" + startBlock +
+                ", isText=" + isText +
                 '}';
     }
 }
