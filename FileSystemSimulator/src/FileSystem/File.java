@@ -6,50 +6,62 @@ package FileSystem;
 
 
 
-/**
- *
- * @author Daniel
- */
+
 public class File {
     private String name;
     private int size;
     private int startBlock;
-    private boolean isText;
+    private String owner;
 
-    public File(String name, int size, int startBlock, boolean isText) {
+    
+    public File(String name, int size, int startBlock, String owner) {
         this.name = name;
         this.size = size;
         this.startBlock = startBlock;
-        this.isText = isText;
+        this.owner = owner;
     }
 
-    public String getName() { 
-        return name; 
-    }
     
-    public int getSize() { 
-        return size; 
-    }
-    
-    public void setSize(int size) { 
-        this.size = size; 
-    }
-    
-    public int getStartBlock() { 
-        return startBlock; 
-    }
-    
-    public boolean isText() { 
-        return isText; 
+    public String getName() {
+        return name;
     }
 
+    public int getSize() {
+        return size;
+    }
+
+    public int getStartBlock() {
+        return startBlock;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+   
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public void setStartBlock(int startBlock) {
+        this.startBlock = startBlock;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+    
     @Override
     public String toString() {
         return "File{" +
                 "name='" + name + '\'' +
                 ", size=" + size +
                 ", startBlock=" + startBlock +
-                ", isText=" + isText +
+                ", owner='" + owner + '\'' +
                 '}';
     }
 }

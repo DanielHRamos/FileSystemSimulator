@@ -4,40 +4,39 @@
  */
 package Main;
 
-import Disk.DiskSimulator;
-import EDD.LinkedList;
+import FileSystem.Directory;
+import FileSystem.File;
 import FileSystem.FileSystemManager;
-import Process.MyProcess;
-import Process.ProcessManager;
-import SchedulerManagement.FIFOScheduler;
-
-
+import GUI.FileSystemSim;
 
 /**
  *
  * @author Daniel
  */
-
+import javax.swing.SwingUtilities;
 
 public class Main {
+
     public static void main(String[] args) {
-        DiskSimulator disk = new DiskSimulator(20);
-        FileSystemManager fs = new FileSystemManager(disk);
+        SwingUtilities.invokeLater(() -> {
+            FileSystemSim gui = new FileSystemSim();
+            gui.setVisible(true);
 
-        ProcessManager pm = new ProcessManager(new FIFOScheduler(), fs, 0);
+            FileSystemManager fs = gui.getFileSystemManager();
+            Directory root = fs.getCurrentDir();
 
-        LinkedList<MyProcess> ejecutados = new LinkedList<>();
+            // Crear un subdirectorio "docs"
+            Directory docs = new Directory("docs", root);
+            root.addDirectory(docs);
 
-        pm.addProcess(new MyProcess("daniel", "CREATE", "doc1.txt", 7));
-        pm.addProcess(new MyProcess("daniel", "READ", "doc1.txt", 7));
-        pm.addProcess(new MyProcess("daniel", "UPDATE", "doc1.txt", 7));
-        pm.addProcess(new MyProcess("daniel", "DELETE", "doc1.txt", 7));
-
-        while (pm.hasProcesses()) {
-            MyProcess running = pm.nextProcess();
-            ejecutados.add(running);
-        }
-
-        pm.printMetrics(ejecutados);
+            // Crear un archivo dentro de "docs"
+            File file1 = new File("ejemplo.txt", 3, 0, "daniel");
+            boolean ok = fs.getDisk().allocateBlocks(file1);
+            if (ok) {
+                docs.addFile(file1);
+                System.out.println("Archivo creado en directorio docs: ejemplo.txt");
+            }
+            gui.refreshUI();            
+        });
     }
 }

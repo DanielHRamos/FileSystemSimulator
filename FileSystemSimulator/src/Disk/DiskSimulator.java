@@ -4,61 +4,117 @@
  */
 package Disk;
 
-import EDD.LinkedList;
+import FileSystem.File;
 
 /**
  *
  * @author Daniel
  */
 public class DiskSimulator {
-    private boolean[] blocks;
+
+    private boolean[] blocks;   // true = ocupado, false = libre
+    private int totalBlocks;
 
     public DiskSimulator(int totalBlocks) {
-        blocks = new boolean[totalBlocks];
+        this.totalBlocks = totalBlocks;
+        this.blocks = new boolean[totalBlocks];
     }
 
-    public int allocate(int size) {
-        for (int i = 0; i <= blocks.length - size; i++) {
-            boolean libre = true;
-            for (int j = 0; j < size; j++) {
-                if (blocks[i + j]) {
-                    libre = false;
-                    break;
-                }
-            }
-            if (libre) {
-                for (int j = 0; j < size; j++) {
-                    blocks[i + j] = true;
-                }
-                return i; // bloque inicial reservado
+    // Asignar bloques por tamaño y bloque inicial
+    public boolean allocateBlocks(int size, int startBlock) {
+        if (startBlock < 0 || startBlock + size > totalBlocks) {
+            return false; // fuera de rango
+        }
+
+        // Verificar disponibilidad
+        for (int i = startBlock; i < startBlock + size; i++) {
+            if (blocks[i]) {
+                return false; // bloque ocupado
             }
         }
-        return -1; // no hay espacio suficiente
+
+        // Marcar como ocupados
+        for (int i = startBlock; i < startBlock + size; i++) {
+            blocks[i] = true;
+        }
+        return true;
     }
 
-    /**
-     * Libera un rango de bloques.
-     * @param start bloque inicial
-     * @param size cantidad de bloques a liberar
-     */
-    public void free(int start, int size) {
-        for (int i = start; i < start + size && i < blocks.length; i++) {
+    // 🔑 Sobrecarga para trabajar directamente con File
+    public boolean allocateBlocks(File file) {
+        int size = file.getSize();
+        // Buscar un bloque inicial libre
+        int startBlock = findFreeSpace(size);
+        if (startBlock == -1) {
+            return false; // no hay espacio suficiente
+        }
+
+        // Asignar bloques
+        for (int i = startBlock; i < startBlock + size; i++) {
+            blocks[i] = true;
+        }
+
+        // Actualizar el archivo con el bloque inicial
+        file.setStartBlock(startBlock);
+        return true;
+    }
+
+    // Liberar bloques por tamaño y bloque inicial
+    public void freeBlocks(int size, int startBlock) {
+        if (startBlock < 0 || startBlock + size > totalBlocks) {
+            return;
+        }
+
+        for (int i = startBlock; i < startBlock + size; i++) {
             blocks[i] = false;
         }
     }
 
-    /**
-     * Muestra el estado del disco en consola.
-     */
+    // 🔑 Liberar bloques de un File
+    public void freeBlocks(File file) {
+        freeBlocks(file.getSize(), file.getStartBlock());
+    }
+
+    // Buscar espacio libre contiguo
+    public int findFreeSpace(int size) {
+        for (int i = 0; i <= totalBlocks - size; i++) {
+            boolean free = true;
+            for (int j = i; j < i + size; j++) {
+                if (blocks[j]) {
+                    free = false;
+                    break;
+                }
+            }
+            if (free) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // Consultar si un bloque está ocupado
+    public boolean isBlockUsed(int index) {
+        if (index < 0 || index >= totalBlocks) {
+            return false;
+        }
+        return blocks[index];
+    }
+
+    // Obtener número total de bloques
+    public int getTotalBlocks() {
+        return totalBlocks;
+    }
+
+    // Imprimir estado del disco (para depuración)
     public void printStatus() {
         System.out.print("Estado del disco: ");
-        for (boolean b : blocks) {
-            System.out.print(b ? "[X]" : "[ ]");
+        for (int i = 0; i < totalBlocks; i++) {
+            System.out.print(blocks[i] ? "[X]" : "[ ]");
         }
         System.out.println();
     }
 
-    public int getTotalBlocks() {
-        return blocks.length;
+    public boolean[] getBlocks() {
+        return blocks;
     }
 }

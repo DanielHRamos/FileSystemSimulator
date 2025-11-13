@@ -2,12 +2,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Process;
+package processs;
 
 import EDD.LinkedList;
 import FileSystem.File;
 import FileSystem.FileSystemManager;
+import GUI.FileSystemSim;
 import SchedulerManagement.Scheduler;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  *
@@ -19,16 +23,16 @@ public class ProcessManager {
     private Scheduler scheduler;
     private FileSystemManager fs;
     private int cabezal;
-    private int totalMovimientos; // suma de movimientos del cabezal
-    private int tiempoSimulado;   // contador de tiempo lógico
+    private int totalMovimientos;
+    private int tiempoSimulado;
+    private FileSystemSim gui;
 
-    public ProcessManager(Scheduler scheduler, FileSystemManager fs, int posicionInicial) {
-        this.readyQueue = new LinkedList<>();
+    public ProcessManager(Scheduler scheduler, FileSystemManager fs, int posicionInicial, FileSystemSim gui) {
         this.scheduler = scheduler;
         this.fs = fs;
         this.cabezal = posicionInicial;
-        this.totalMovimientos = 0;
-        this.tiempoSimulado = 0;
+        this.readyQueue = new LinkedList<>();
+        this.gui = gui;
     }
 
     public void addProcess(MyProcess p) {
@@ -52,13 +56,11 @@ public class ProcessManager {
 
         ejecutarOperacion(p);
 
-        // Calcular movimiento del cabezal
         int movimiento = Math.abs(cabezal - p.getTargetBlock());
         totalMovimientos += movimiento;
         cabezal = p.getTargetBlock();
 
-        // Terminar proceso
-        tiempoSimulado += 5; // cada proceso tarda 5 unidades de tiempo (simulación)
+        tiempoSimulado += 5;
         p.setFinishTime(tiempoSimulado);
         terminateProcess(p);
 
@@ -68,7 +70,7 @@ public class ProcessManager {
     private void ejecutarOperacion(MyProcess p) {
         switch (p.getOperation()) {
             case "CREATE":
-                fs.createFile(p.getTarget(), 3, p.getOwner(), true);
+                fs.createFile(p.getTarget(), 3, p.getOwner());
                 break;
             case "DELETE":
                 File f = fs.getCurrentDir().findFile(p.getTarget());
@@ -91,6 +93,10 @@ public class ProcessManager {
             default:
                 System.out.println("Operación no reconocida: " + p.getOperation());
         }
+
+        
+        gui.updateAssignmentTable();
+        gui.getDiskPanel().repaint();   
     }
 
     public void terminateProcess(MyProcess p) {
@@ -104,7 +110,6 @@ public class ProcessManager {
         return !readyQueue.isEmpty();
     }
 
-    // --- MÉTRICAS ---
     public void printMetrics(LinkedList<MyProcess> ejecutados) {
         int totalWait = 0;
         int totalTurnaround = 0;
@@ -123,4 +128,39 @@ public class ProcessManager {
         System.out.println("Tiempo de retorno promedio: " + avgTurnaround);
         System.out.println("Movimientos totales del cabezal: " + totalMovimientos);
     }
+
+    public void loadProcessesFromFile(String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            boolean firstLine = true;
+            while ((line = br.readLine()) != null) {
+                if (firstLine) { 
+                    firstLine = false;
+                    continue;
+                }
+                String[] parts = line.split(",");
+                if (parts.length == 4) {
+                    String owner = parts[0].trim();
+                    String operation = parts[1].trim();
+                    String target = parts[2].trim();
+                    int block = Integer.parseInt(parts[3].trim());
+
+                    MyProcess p = new MyProcess(owner, operation, target, block);
+                    addProcess(p);
+                }
+            }
+            System.out.println("Procesos cargados desde archivo: " + filePath);
+        } catch (IOException e) {
+            System.out.println("Error leyendo archivo: " + e.getMessage());
+        }
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public LinkedList<MyProcess> getReadyQueue() {
+        return readyQueue;
+    }
+
 }

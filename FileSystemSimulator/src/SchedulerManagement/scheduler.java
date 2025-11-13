@@ -5,7 +5,7 @@
 package SchedulerManagement;
 
 import EDD.LinkedList;
-import Process.MyProcess;
+import processs.MyProcess;
 
 /**
  *

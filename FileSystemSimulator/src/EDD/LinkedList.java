@@ -13,16 +13,20 @@ public class LinkedList<T> {
     private Node<T> head;
     private int size;
 
-   
-    private static class Node<T> {
+    public static class Node<T> {
 
-        T data;
-        Node<T> next;
+        private T data;
+        public Node<T> next;
 
         Node(T data) {
             this.data = data;
             this.next = null;
         }
+
+        public T getData() {
+            return data;
+        }
+
     }
 
     public LinkedList() {
@@ -52,12 +56,12 @@ public class LinkedList<T> {
         Node<T> newNode = new Node<>(data);
 
         if (index == 0) {
-            
+
             newNode.next = head;
             head = newNode;
-            
+
         } else {
-           
+
             Node<T> current = head;
             for (int i = 0; i < index - 1; i++) {
                 current = current.next;
