@@ -15,7 +15,7 @@ public class Directory {
     private String name;
     private Directory parent;
     private LinkedList<File> files;
-    private LinkedList<Directory> directories; 
+    private LinkedList<Directory> directories;
 
     public Directory(String name, Directory parent) {
         this.name = name;
@@ -38,7 +38,7 @@ public class Directory {
 
     public LinkedList<Directory> getDirectories() {
         return directories;
-    } 
+    }
 
     public void addFile(File f) {
         files.add(f);
@@ -77,4 +77,25 @@ public class Directory {
             System.out.println("  " + directories.get(i).getName());
         }
     }
+
+    public String toString() {
+        return name;
+    }
+
+    public void setParent(Directory parent) {
+        this.parent = parent;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setFiles(LinkedList<File> files) {
+        this.files = files;
+    }
+
+    public void setDirectories(LinkedList<Directory> directories) {
+        this.directories = directories;
+    }
+
 }

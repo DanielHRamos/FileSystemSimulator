@@ -4,16 +4,13 @@
  */
 package FileSystem;
 
-
-
-
 public class File {
+
     private String name;
     private int size;
     private int startBlock;
     private String owner;
 
-    
     public File(String name, int size, int startBlock, String owner) {
         this.name = name;
         this.size = size;
@@ -21,7 +18,6 @@ public class File {
         this.owner = owner;
     }
 
-    
     public String getName() {
         return name;
     }
@@ -38,7 +34,6 @@ public class File {
         return owner;
     }
 
-   
     public void setName(String name) {
         this.name = name;
     }
@@ -54,14 +49,9 @@ public class File {
     public void setOwner(String owner) {
         this.owner = owner;
     }
-    
+
     @Override
     public String toString() {
-        return "File{" +
-                "name='" + name + '\'' +
-                ", size=" + size +
-                ", startBlock=" + startBlock +
-                ", owner='" + owner + '\'' +
-                '}';
+        return name + " (" + size + " bloques)";
     }
 }

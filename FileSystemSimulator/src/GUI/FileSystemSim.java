@@ -14,6 +14,7 @@ import SchedulerManagement.CSCANScheduler;
 import SchedulerManagement.FIFOScheduler;
 import SchedulerManagement.SCANScheduler;
 import SchedulerManagement.SSTFScheduler;
+import java.util.Enumeration;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -21,6 +22,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 /**
@@ -35,16 +37,16 @@ public class FileSystemSim extends javax.swing.JFrame {
 
     public FileSystemSim() {
         initComponents();
-        
+
         DiskSimulator disk = new DiskSimulator(50);
         fs = new FileSystemManager(disk);
         diskPanel = new DiskPanel(disk);
         BlockAllocate.setLayout(new java.awt.BorderLayout());
         BlockAllocate.add(diskPanel, java.awt.BorderLayout.CENTER);
         processManager = new ProcessManager(new FIFOScheduler(), fs, 0, this);
-        
+
         initFileExplorer();
-    }    
+    }
 
     private void initFileExplorer() {
         Directory rootDir = fs.getCurrentDir();
@@ -63,6 +65,19 @@ public class FileSystemSim extends javax.swing.JFrame {
         createFileItem.addActionListener(e -> createFileAction());
         popupMenu.add(createFileItem);
 
+        // Renombrar
+        JMenuItem renameItem = new JMenuItem("Renombrar");
+        renameItem.addActionListener(e -> renameNode());
+        popupMenu.add(renameItem);
+
+        JMenuItem deleteItem = new JMenuItem("Eliminar");
+        deleteItem.addActionListener(e -> deleteNode());
+        popupMenu.add(deleteItem);
+
+        JMenuItem moveItem = new JMenuItem("Mover");
+        moveItem.addActionListener(e -> moveNode());
+        popupMenu.add(moveItem);
+
         FileExplorer.setComponentPopupMenu(popupMenu);
 
         FileExplorer.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -78,19 +93,122 @@ public class FileSystemSim extends javax.swing.JFrame {
         });
     }
 
+    private void renameNode() {
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
+        if (selectedNode == null) {
+            return;
+        }
+
+        Object obj = selectedNode.getUserObject();
+        String newName = JOptionPane.showInputDialog(this, "Nuevo nombre:");
+
+        if (newName != null && !newName.trim().isEmpty()) {
+            if (obj instanceof Directory dir) {
+                dir.setName(newName);
+            } else if (obj instanceof File file) {
+                file.setName(newName);
+            }
+            ((DefaultTreeModel) FileExplorer.getModel()).nodeChanged(selectedNode);
+        }
+    }
+
+    private void deleteNode() {
+        DefaultTreeModel model = (DefaultTreeModel) FileExplorer.getModel();
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
+        if (selectedNode == null || selectedNode.isRoot()) {
+            return;
+        }
+
+        Object obj = selectedNode.getUserObject();
+        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+        Object parentObj = parentNode.getUserObject();
+
+        if (parentObj instanceof Directory parentDir) {
+            if (obj instanceof Directory dir) {
+                parentDir.removeDirectory(dir);
+            } else if (obj instanceof File file) {
+                parentDir.removeFile(file);
+                fs.getDisk().freeBlocks(file); // liberar bloques
+            }
+            model.removeNodeFromParent(selectedNode);
+            updateAssignmentTable();
+            diskPanel.repaint();
+        }
+    }
+
+    private void moveNode() {
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
+        if (selectedNode == null || selectedNode.isRoot()) {
+            return;
+        }
+
+        Object obj = selectedNode.getUserObject();
+
+        
+        String targetName = JOptionPane.showInputDialog(this,
+                "Ingrese el nombre exacto del directorio destino:");
+
+        if (targetName == null || targetName.trim().isEmpty()) {
+            return;
+        }
+
+        
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) FileExplorer.getModel().getRoot();
+        DefaultMutableTreeNode targetNode = findNodeByName(root, targetName.trim());
+
+        if (targetNode != null && targetNode.getUserObject() instanceof Directory targetDir) {
+            DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+            Object parentObj = parentNode.getUserObject();
+
+            if (parentObj instanceof Directory parentDir) {
+                if (obj instanceof Directory dir) {
+                    parentDir.removeDirectory(dir);
+                    dir.setParent(targetDir); 
+                    targetDir.addDirectory(dir);
+                } else if (obj instanceof File file) {
+                    parentDir.removeFile(file);
+                    targetDir.addFile(file);
+                }
+
+                
+                DefaultTreeModel model = (DefaultTreeModel) FileExplorer.getModel();
+                model.removeNodeFromParent(selectedNode);
+                model.insertNodeInto(selectedNode, targetNode, targetNode.getChildCount());
+                FileExplorer.expandPath(new TreePath(targetNode.getPath()));
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "No se encontró un directorio con ese nombre.",
+                    "Destino inválido",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private DefaultMutableTreeNode findNodeByName(DefaultMutableTreeNode root, String name) {
+        Enumeration<TreeNode> e = root.depthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
+            Object obj = node.getUserObject();
+            if (obj instanceof Directory dir && dir.getName().equals(name)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     private void buildTree(DefaultMutableTreeNode parentNode, Directory dir) {
-        // Subdirectorios
+        
         LinkedList<Directory> subDirs = dir.getDirectories();
         LinkedList.Node<Directory> currentDir = subDirs.getHead();
         while (currentDir != null) {
             Directory sub = currentDir.getData();
             DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(sub);
             parentNode.add(childNode);
-            buildTree(childNode, sub); // recursivo
+            buildTree(childNode, sub); 
             currentDir = currentDir.next;
         }
 
-        // Archivos
+        
         LinkedList<File> files = dir.getFiles();
         LinkedList.Node<File> currentFile = files.getHead();
         while (currentFile != null) {
@@ -100,10 +218,7 @@ public class FileSystemSim extends javax.swing.JFrame {
             currentFile = currentFile.next;
         }
     }
-
-    /**
-     * Refresca el árbol cuando se crean o eliminan archivos/directorios
-     */
+    
     public void refreshFileExplorer() {
         Directory rootDir = fs.getCurrentDir();
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootDir.getName());
@@ -168,11 +283,9 @@ public class FileSystemSim extends javax.swing.JFrame {
             if (dirName != null && !dirName.trim().isEmpty()) {
                 Directory parentDir = (Directory) nodeParentObject;
 
-                
                 Directory newDir = new Directory(dirName, parentDir);
                 parentDir.addDirectory(newDir);
 
-                
                 DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(newDir);
                 treeModel.insertNodeInto(newNode, selectedParentNode, selectedParentNode.getChildCount());
                 this.FileExplorer.expandPath(new TreePath(selectedParentNode.getPath()));
@@ -205,7 +318,7 @@ public class FileSystemSim extends javax.swing.JFrame {
         Object nodeParentObject = selectedParentNode.getUserObject();
 
         if (nodeParentObject instanceof Directory) {
-            
+
             String fileName = JOptionPane.showInputDialog(this,
                     "Ingrese el nombre del archivo:",
                     "Crear Archivo",
@@ -325,8 +438,6 @@ public class FileSystemSim extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         FileExplorer = new javax.swing.JTree();
         jLabel1 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        PolicyChooser = new javax.swing.JComboBox<>();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         AllocationTable = new javax.swing.JTable();
@@ -336,6 +447,10 @@ public class FileSystemSim extends javax.swing.JFrame {
         BlockAllocate = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        PolicyChooser = new javax.swing.JComboBox<>();
+        jLabel6 = new javax.swing.JLabel();
+        ModeComboBox = new javax.swing.JComboBox<>();
         jMenuBar1 = new javax.swing.JMenuBar();
         MenuFileButton = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -356,22 +471,9 @@ public class FileSystemSim extends javax.swing.JFrame {
         jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 194, 510));
 
         jLabel1.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         jLabel1.setText("Explorador de archivos");
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
-
-        jLabel4.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel4.setText("Política de planificación");
-        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 550, -1, -1));
-
-        PolicyChooser.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SCAN", "C-SCAN", "SSTF" }));
-        PolicyChooser.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                PolicyChooserActionPerformed(evt);
-            }
-        });
-        jPanel1.add(PolicyChooser, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 580, 110, -1));
 
         jPanel.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 210, 700));
 
@@ -395,7 +497,7 @@ public class FileSystemSim extends javax.swing.JFrame {
         jPanel2.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 470, 410));
 
         jLabel2.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         jLabel2.setText("Tabla de Asignación");
         jPanel2.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
 
@@ -406,7 +508,7 @@ public class FileSystemSim extends javax.swing.JFrame {
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel3.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         jLabel3.setText("Almacenamiento");
         jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
 
@@ -430,9 +532,30 @@ public class FileSystemSim extends javax.swing.JFrame {
         jPanel5.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel5.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel5.setText("Instrucciones");
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jLabel5.setText("Ajustes");
         jPanel5.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
+
+        jLabel4.setBackground(new java.awt.Color(0, 0, 0));
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel4.setText("Modo:");
+        jPanel5.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, -1));
+
+        PolicyChooser.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SCAN", "C-SCAN", "SSTF" }));
+        PolicyChooser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PolicyChooserActionPerformed(evt);
+            }
+        });
+        jPanel5.add(PolicyChooser, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 50, 130, -1));
+
+        jLabel6.setBackground(new java.awt.Color(0, 0, 0));
+        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel6.setText("Política de planificación:");
+        jPanel5.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
+
+        ModeComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Administrador", "Usuario" }));
+        jPanel5.add(ModeComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 110, -1, -1));
 
         jPanel.add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 450, 1030, 250));
 
@@ -492,12 +615,14 @@ public class FileSystemSim extends javax.swing.JFrame {
     private javax.swing.JPanel BlockAllocate;
     private javax.swing.JTree FileExplorer;
     private javax.swing.JMenu MenuFileButton;
+    private javax.swing.JComboBox<String> ModeComboBox;
     private javax.swing.JComboBox<String> PolicyChooser;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel;

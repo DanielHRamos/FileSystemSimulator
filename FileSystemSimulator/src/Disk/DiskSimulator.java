@@ -12,7 +12,7 @@ import FileSystem.File;
  */
 public class DiskSimulator {
 
-    private boolean[] blocks;   // true = ocupado, false = libre
+    private boolean[] blocks;  
     private int totalBlocks;
 
     public DiskSimulator(int totalBlocks) {
