@@ -65,7 +65,6 @@ public class FileSystemSim extends javax.swing.JFrame {
         createFileItem.addActionListener(e -> createFileAction());
         popupMenu.add(createFileItem);
 
-        // Renombrar
         JMenuItem renameItem = new JMenuItem("Renombrar");
         renameItem.addActionListener(e -> renameNode());
         popupMenu.add(renameItem);
@@ -94,6 +93,16 @@ public class FileSystemSim extends javax.swing.JFrame {
     }
 
     private void renameNode() {
+
+        String mode = (String) ModeComboBox.getSelectedItem();
+        if ("usuario".equalsIgnoreCase(mode)) {
+            JOptionPane.showMessageDialog(this,
+                    "Operación no permitida en modo usuario.",
+                    "Acceso restringido",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
         if (selectedNode == null) {
             return;
@@ -110,9 +119,20 @@ public class FileSystemSim extends javax.swing.JFrame {
             }
             ((DefaultTreeModel) FileExplorer.getModel()).nodeChanged(selectedNode);
         }
+        refreshUI();
     }
 
     private void deleteNode() {
+
+        String mode = (String) ModeComboBox.getSelectedItem();
+        if ("usuario".equalsIgnoreCase(mode)) {
+            JOptionPane.showMessageDialog(this,
+                    "Operación no permitida en modo usuario.",
+                    "Acceso restringido",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         DefaultTreeModel model = (DefaultTreeModel) FileExplorer.getModel();
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
         if (selectedNode == null || selectedNode.isRoot()) {
@@ -128,15 +148,23 @@ public class FileSystemSim extends javax.swing.JFrame {
                 parentDir.removeDirectory(dir);
             } else if (obj instanceof File file) {
                 parentDir.removeFile(file);
-                fs.getDisk().freeBlocks(file); // liberar bloques
+                fs.getDisk().freeBlocks(file);
             }
             model.removeNodeFromParent(selectedNode);
-            updateAssignmentTable();
-            diskPanel.repaint();
+            refreshUI();
         }
     }
 
     private void moveNode() {
+        String mode = (String) ModeComboBox.getSelectedItem();
+        if ("usuario".equalsIgnoreCase(mode)) {
+            JOptionPane.showMessageDialog(this,
+                    "Operación no permitida en modo usuario.",
+                    "Acceso restringido",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) FileExplorer.getLastSelectedPathComponent();
         if (selectedNode == null || selectedNode.isRoot()) {
             return;
@@ -144,7 +172,6 @@ public class FileSystemSim extends javax.swing.JFrame {
 
         Object obj = selectedNode.getUserObject();
 
-        
         String targetName = JOptionPane.showInputDialog(this,
                 "Ingrese el nombre exacto del directorio destino:");
 
@@ -152,7 +179,6 @@ public class FileSystemSim extends javax.swing.JFrame {
             return;
         }
 
-        
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) FileExplorer.getModel().getRoot();
         DefaultMutableTreeNode targetNode = findNodeByName(root, targetName.trim());
 
@@ -163,14 +189,13 @@ public class FileSystemSim extends javax.swing.JFrame {
             if (parentObj instanceof Directory parentDir) {
                 if (obj instanceof Directory dir) {
                     parentDir.removeDirectory(dir);
-                    dir.setParent(targetDir); 
+                    dir.setParent(targetDir);
                     targetDir.addDirectory(dir);
                 } else if (obj instanceof File file) {
                     parentDir.removeFile(file);
                     targetDir.addFile(file);
                 }
 
-                
                 DefaultTreeModel model = (DefaultTreeModel) FileExplorer.getModel();
                 model.removeNodeFromParent(selectedNode);
                 model.insertNodeInto(selectedNode, targetNode, targetNode.getChildCount());
@@ -182,6 +207,7 @@ public class FileSystemSim extends javax.swing.JFrame {
                     "Destino inválido",
                     JOptionPane.ERROR_MESSAGE);
         }
+        refreshUI();
     }
 
     private DefaultMutableTreeNode findNodeByName(DefaultMutableTreeNode root, String name) {
@@ -197,18 +223,17 @@ public class FileSystemSim extends javax.swing.JFrame {
     }
 
     private void buildTree(DefaultMutableTreeNode parentNode, Directory dir) {
-        
+
         LinkedList<Directory> subDirs = dir.getDirectories();
         LinkedList.Node<Directory> currentDir = subDirs.getHead();
         while (currentDir != null) {
             Directory sub = currentDir.getData();
             DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(sub);
             parentNode.add(childNode);
-            buildTree(childNode, sub); 
+            buildTree(childNode, sub);
             currentDir = currentDir.next;
         }
 
-        
         LinkedList<File> files = dir.getFiles();
         LinkedList.Node<File> currentFile = files.getHead();
         while (currentFile != null) {
@@ -218,7 +243,7 @@ public class FileSystemSim extends javax.swing.JFrame {
             currentFile = currentFile.next;
         }
     }
-    
+
     public void refreshFileExplorer() {
         Directory rootDir = fs.getCurrentDir();
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootDir.getName());
@@ -227,39 +252,16 @@ public class FileSystemSim extends javax.swing.JFrame {
         FileExplorer.expandRow(0);
     }
 
-    public void updateAssignmentTable() {
-        DefaultTableModel model = (DefaultTableModel) AllocationTable.getModel();
-        model.setRowCount(0);
-
-        if (fs != null) {
-            for (int i = 0; i < fs.getCurrentDir().getFiles().size(); i++) {
-                File f = fs.getCurrentDir().getFiles().get(i);
-                model.addRow(new Object[]{
-                    f.getName(),
-                    f.getSize(),
-                    f.getStartBlock()
-                });
-            }
-        }
-    }
-
-    public void setFileSystemManager(FileSystemManager fs) {
-        this.fs = fs;
-    }
-
-    public void setProcessManager(ProcessManager pm) {
-        this.processManager = pm;
-    }
-
-    public FileSystemManager getFileSystemManager() {
-        return fs;
-    }
-
-    public DiskPanel getDiskPanel() {
-        return diskPanel;
-    }
-
     private void createDirectoryAction() {
+        String mode = (String) ModeComboBox.getSelectedItem();
+        if ("usuario".equalsIgnoreCase(mode)) {
+            JOptionPane.showMessageDialog(this,
+                    "Operación no permitida en modo usuario.",
+                    "Acceso restringido",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         DefaultTreeModel treeModel = (DefaultTreeModel) this.FileExplorer.getModel();
         DefaultMutableTreeNode selectedParentNode
                 = (DefaultMutableTreeNode) this.FileExplorer.getLastSelectedPathComponent();
@@ -290,19 +292,23 @@ public class FileSystemSim extends javax.swing.JFrame {
                 treeModel.insertNodeInto(newNode, selectedParentNode, selectedParentNode.getChildCount());
                 this.FileExplorer.expandPath(new TreePath(selectedParentNode.getPath()));
 
-                this.updateFilesTable();
+                refreshUI();
                 System.out.println("Directorio creado exitosamente: " + dirName);
             }
         }
-
-    }
-
-    public void refreshUI() {
-        updateFilesTable();
-        diskPanel.repaint();
     }
 
     private void createFileAction() {
+
+        String mode = (String) ModeComboBox.getSelectedItem();
+        if ("usuario".equalsIgnoreCase(mode)) {
+            JOptionPane.showMessageDialog(this,
+                    "Operación no permitida en modo usuario.",
+                    "Acceso restringido",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         DefaultTreeModel treeModel = (DefaultTreeModel) this.FileExplorer.getModel();
         DefaultMutableTreeNode selectedParentNode
                 = (DefaultMutableTreeNode) this.FileExplorer.getLastSelectedPathComponent();
@@ -318,14 +324,13 @@ public class FileSystemSim extends javax.swing.JFrame {
         Object nodeParentObject = selectedParentNode.getUserObject();
 
         if (nodeParentObject instanceof Directory) {
-
             String fileName = JOptionPane.showInputDialog(this,
                     "Ingrese el nombre del archivo:",
                     "Crear Archivo",
                     JOptionPane.QUESTION_MESSAGE);
 
             if (fileName != null && !fileName.trim().isEmpty()) {
-                // Pedir tamaño en bloques
+
                 String sizeStr = JOptionPane.showInputDialog(this,
                         "Ingrese el tamaño del archivo en bloques:",
                         "Tamaño Archivo",
@@ -334,29 +339,24 @@ public class FileSystemSim extends javax.swing.JFrame {
                 try {
                     int size = Integer.parseInt(sizeStr);
 
-                    // Buscar espacio libre en el disco
                     int startBlock = fs.getDisk().findFreeSpace(size);
 
                     if (startBlock != -1) {
-                        // Crear archivo con nombre, tamaño, bloque inicial y dueño
+
                         File newFile = new File(fileName, size, startBlock, "usuario");
 
-                        // Asignar bloques en el disco
                         boolean allocationSuccess = fs.getDisk().allocateBlocks(newFile);
 
                         if (allocationSuccess) {
-                            // Añadir al directorio padre
+
                             Directory parentDir = (Directory) nodeParentObject;
                             parentDir.addFile(newFile);
 
-                            // Añadir al JTree
                             DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(newFile);
                             treeModel.insertNodeInto(newNode, selectedParentNode, selectedParentNode.getChildCount());
                             this.FileExplorer.expandPath(new TreePath(selectedParentNode.getPath()));
 
-                            // Actualizar tabla y panel de bloques
-                            this.updateAssignmentTable();
-                            this.diskPanel.repaint();
+                            refreshUI();
 
                             System.out.println("Archivo creado exitosamente: " + fileName);
                         } else {
@@ -388,7 +388,7 @@ public class FileSystemSim extends javax.swing.JFrame {
 
     private void updateFilesTable() {
         DefaultTableModel model = (DefaultTableModel) AllocationTable.getModel();
-        model.setRowCount(0); // limpiar filas anteriores
+        model.setRowCount(0);
 
         if (fs != null && fs.getCurrentDir() != null) {
 
@@ -422,6 +422,55 @@ public class FileSystemSim extends javax.swing.JFrame {
         if (diskPanel != null) {
             diskPanel.repaint();
         }
+    }
+
+    private void addFilesRecursive(Directory dir, DefaultTableModel model) {
+        
+        EDD.LinkedList<File> files = dir.getFiles();
+        EDD.LinkedList.Node<File> currentFile = files.getHead();
+        while (currentFile != null) {
+            File f = currentFile.getData();
+            model.addRow(new Object[]{f.getName(), f.getSize(), f.getStartBlock(), f.getOwner()});
+            currentFile = currentFile.next;
+        }
+        
+        EDD.LinkedList<Directory> dirs = dir.getDirectories();
+        EDD.LinkedList.Node<Directory> currentDir = dirs.getHead();
+        while (currentDir != null) {
+            addFilesRecursive(currentDir.getData(), model);
+            currentDir = currentDir.next;
+        }
+    }
+
+    private void updateAssignmentTable() {
+        DefaultTableModel model = (DefaultTableModel) AllocationTable.getModel();
+        model.setRowCount(0);
+
+        if (fs != null && fs.getCurrentDir() != null) {
+            addFilesRecursive(fs.getCurrentDir(), model);
+        }
+    }
+
+    public void refreshUI() {
+        updateFilesTable();
+        updateAssignmentTable();
+        diskPanel.repaint();
+    }
+
+    public void setFileSystemManager(FileSystemManager fs) {
+        this.fs = fs;
+    }
+
+    public void setProcessManager(ProcessManager pm) {
+        this.processManager = pm;
+    }
+
+    public FileSystemManager getFileSystemManager() {
+        return fs;
+    }
+
+    public DiskPanel getDiskPanel() {
+        return diskPanel;
     }
 
     /**
@@ -555,6 +604,11 @@ public class FileSystemSim extends javax.swing.JFrame {
         jPanel5.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, -1));
 
         ModeComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Administrador", "Usuario" }));
+        ModeComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModeComboBoxActionPerformed(evt);
+            }
+        });
         jPanel5.add(ModeComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 110, -1, -1));
 
         jPanel.add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 450, 1030, 250));
@@ -609,6 +663,10 @@ public class FileSystemSim extends javax.swing.JFrame {
         System.out.println("Política seleccionada: " + selectedPolicy);
         updateAssignmentTable();
     }//GEN-LAST:event_PolicyChooserActionPerformed
+
+    private void ModeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModeComboBoxActionPerformed
+
+    }//GEN-LAST:event_ModeComboBoxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTable AllocationTable;
