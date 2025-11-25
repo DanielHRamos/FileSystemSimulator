@@ -1,0 +1,2 @@
+DIRECTORIO: root
+  ARCHIVO: hola | Tamaño: 43 | Bloque inicial: 0 | Dueño: usuario

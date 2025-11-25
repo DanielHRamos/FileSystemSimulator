@@ -18,7 +18,7 @@ public class FileSystemManager {
 
     public FileSystemManager(DiskSimulator disk) {
         this.disk = disk;
-        this.root = new Directory("root", null);
+        this.root = new Directory("Disco local (C:)", null);
         this.currentDir = root;
     }
 

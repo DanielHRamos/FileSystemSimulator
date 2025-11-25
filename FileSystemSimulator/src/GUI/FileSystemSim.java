@@ -14,7 +14,10 @@ import SchedulerManagement.CSCANScheduler;
 import SchedulerManagement.FIFOScheduler;
 import SchedulerManagement.SCANScheduler;
 import SchedulerManagement.SSTFScheduler;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Enumeration;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -38,6 +41,7 @@ public class FileSystemSim extends javax.swing.JFrame {
     public FileSystemSim() {
         initComponents();
 
+        SaveMenuButton.addActionListener(e -> saveFileSystem());
         DiskSimulator disk = new DiskSimulator(50);
         fs = new FileSystemManager(disk);
         diskPanel = new DiskPanel(disk);
@@ -425,7 +429,7 @@ public class FileSystemSim extends javax.swing.JFrame {
     }
 
     private void addFilesRecursive(Directory dir, DefaultTableModel model) {
-        
+
         EDD.LinkedList<File> files = dir.getFiles();
         EDD.LinkedList.Node<File> currentFile = files.getHead();
         while (currentFile != null) {
@@ -433,7 +437,7 @@ public class FileSystemSim extends javax.swing.JFrame {
             model.addRow(new Object[]{f.getName(), f.getSize(), f.getStartBlock(), f.getOwner()});
             currentFile = currentFile.next;
         }
-        
+
         EDD.LinkedList<Directory> dirs = dir.getDirectories();
         EDD.LinkedList.Node<Directory> currentDir = dirs.getHead();
         while (currentDir != null) {
@@ -473,6 +477,57 @@ public class FileSystemSim extends javax.swing.JFrame {
         return diskPanel;
     }
 
+    private void saveFileSystem() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar sistema de archivos");
+
+       
+        fileChooser.setSelectedFile(new java.io.File("filesystem.txt"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            java.io.File fileToSave = fileChooser.getSelectedFile();
+
+            try (PrintWriter writer = new PrintWriter(fileToSave)) {
+                Directory root = fs.getCurrentDir(); // o fs.getRootDir() si lo tienes
+                saveDirectoryRecursive(root, writer);
+
+                JOptionPane.showMessageDialog(this,
+                        "Sistema de archivos guardado en:\n" + fileToSave.getAbsolutePath(),
+                        "Guardado exitoso",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al guardar el sistema de archivos: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void saveDirectoryRecursive(Directory dir, PrintWriter writer) {
+        writer.println("DIRECTORIO: " + dir.getName());
+
+        EDD.LinkedList<File> files = dir.getFiles();
+        EDD.LinkedList.Node<File> currentFile = files.getHead();
+        while (currentFile != null) {
+            File f = currentFile.getData();
+            writer.println("  ARCHIVO: " + f.getName()
+                    + " | Tamaño: " + f.getSize()
+                    + " | Bloque inicial: " + f.getStartBlock()
+                    + " | Dueño: " + f.getOwner());
+            currentFile = currentFile.next;
+        }
+
+        EDD.LinkedList<Directory> dirs = dir.getDirectories();
+        EDD.LinkedList.Node<Directory> currentDir = dirs.getHead();
+        while (currentDir != null) {
+            saveDirectoryRecursive(currentDir.getData(), writer);
+            currentDir = currentDir.next;
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -502,7 +557,7 @@ public class FileSystemSim extends javax.swing.JFrame {
         ModeComboBox = new javax.swing.JComboBox<>();
         jMenuBar1 = new javax.swing.JMenuBar();
         MenuFileButton = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        SaveMenuButton = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -615,8 +670,13 @@ public class FileSystemSim extends javax.swing.JFrame {
 
         MenuFileButton.setText("Archivo");
 
-        jMenuItem1.setText("Guardar");
-        MenuFileButton.add(jMenuItem1);
+        SaveMenuButton.setText("Guardar");
+        SaveMenuButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SaveMenuButtonActionPerformed(evt);
+            }
+        });
+        MenuFileButton.add(SaveMenuButton);
 
         jMenuBar1.add(MenuFileButton);
 
@@ -668,6 +728,10 @@ public class FileSystemSim extends javax.swing.JFrame {
 
     }//GEN-LAST:event_ModeComboBoxActionPerformed
 
+    private void SaveMenuButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveMenuButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_SaveMenuButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTable AllocationTable;
     private javax.swing.JPanel BlockAllocate;
@@ -675,6 +739,7 @@ public class FileSystemSim extends javax.swing.JFrame {
     private javax.swing.JMenu MenuFileButton;
     private javax.swing.JComboBox<String> ModeComboBox;
     private javax.swing.JComboBox<String> PolicyChooser;
+    private javax.swing.JMenuItem SaveMenuButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -682,7 +747,6 @@ public class FileSystemSim extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

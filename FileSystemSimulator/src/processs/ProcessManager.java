@@ -92,11 +92,8 @@ public class ProcessManager {
                 break;
             default:
                 System.out.println("Operación no reconocida: " + p.getOperation());
-        }
-
-        
-        gui.updateAssignmentTable();
-        gui.getDiskPanel().repaint();   
+        }        
+        gui.refreshUI();        
     }
 
     public void terminateProcess(MyProcess p) {
