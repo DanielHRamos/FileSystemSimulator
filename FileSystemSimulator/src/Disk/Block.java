@@ -10,10 +10,10 @@ package Disk;
  */
 public class Block {
     
-    private final int id;              // Identificador único del bloque
-    private boolean ocupado;           // Estado: libre u ocupado
-    private String owner;              // Archivo o proceso que lo ocupa
-    private Block next;                // Referencia al siguiente bloque (encadenado)
+    private final int id;              
+    private boolean ocupado;           
+    private String owner;              
+    private Block next;                
 
     public Block(int id) {
         this.id = id;

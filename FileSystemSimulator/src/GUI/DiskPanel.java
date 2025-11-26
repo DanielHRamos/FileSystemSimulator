@@ -25,7 +25,7 @@ public class DiskPanel extends JPanel {
 
     public DiskPanel(DiskSimulator disk) {
         this.disk = disk;
-        // Ajustar tamaño preferido del panel según número de bloques
+        
         int cols = 10; 
         int rows = (int) Math.ceil((double) disk.getTotalBlocks() / cols);
         setPreferredSize(new Dimension(cols * BLOCK_WIDTH, rows * BLOCK_HEIGHT));

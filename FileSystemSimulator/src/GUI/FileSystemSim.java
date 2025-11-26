@@ -41,6 +41,7 @@ public class FileSystemSim extends javax.swing.JFrame {
     public FileSystemSim() {
         initComponents();
 
+        setTitle("Simulador de Sistema de Archivos");
         SaveMenuButton.addActionListener(e -> saveFileSystem());
         DiskSimulator disk = new DiskSimulator(50);
         fs = new FileSystemManager(disk);
@@ -149,14 +150,12 @@ public class FileSystemSim extends javax.swing.JFrame {
 
         if (parentObj instanceof Directory parentDir) {
             if (obj instanceof Directory dir) {
-                parentDir.removeDirectory(dir);
-            } else if (obj instanceof File file) {
-                parentDir.removeFile(file);
-                fs.getDisk().freeBlocks(file);
-            }
-            model.removeNodeFromParent(selectedNode);
-            refreshUI();
-        }
+                deleteDirectoryRecursive(dir); // liberar todo
+                parentDir.removeDirectory(dir); // eliminar del padre
+                model.removeNodeFromParent(selectedNode); // eliminar del árbol
+                refreshUI(); // actualizar interfaz
+            }            
+        }        
     }
 
     private void moveNode() {
@@ -428,6 +427,27 @@ public class FileSystemSim extends javax.swing.JFrame {
         }
     }
 
+    private void deleteDirectoryRecursive(Directory dir) {
+
+        EDD.LinkedList<File> files = dir.getFiles();
+        EDD.LinkedList.Node<File> currentFile = files.getHead();
+        while (currentFile != null) {
+            File f = currentFile.getData();
+            fs.getDisk().freeBlocks(f);
+            currentFile = currentFile.next;
+        }
+
+        EDD.LinkedList<Directory> subDirs = dir.getDirectories();
+        EDD.LinkedList.Node<Directory> currentDir = subDirs.getHead();
+        while (currentDir != null) {
+            deleteDirectoryRecursive(currentDir.getData());
+            currentDir = currentDir.next;
+        }
+
+        dir.getFiles().clear();
+        dir.getDirectories().clear();
+    }
+
     private void addFilesRecursive(Directory dir, DefaultTableModel model) {
 
         EDD.LinkedList<File> files = dir.getFiles();
@@ -481,7 +501,6 @@ public class FileSystemSim extends javax.swing.JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Guardar sistema de archivos");
 
-       
         fileChooser.setSelectedFile(new java.io.File("filesystem.txt"));
 
         int userSelection = fileChooser.showSaveDialog(this);

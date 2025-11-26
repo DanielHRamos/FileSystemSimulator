@@ -118,4 +118,9 @@ public class LinkedList<T> {
         }
         return current.data;
     }
+
+    public void clear() {
+        head = null;
+        size = 0;
+    }
 }

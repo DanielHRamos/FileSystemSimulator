@@ -13,7 +13,7 @@ import processs.MyProcess;
  */
 public class SCANScheduler implements Scheduler {
 
-    private boolean direccionDerecha; // true = hacia bloques mayores, false = hacia menores
+    private boolean direccionDerecha; 
 
     public SCANScheduler(boolean direccionDerecha) {
         this.direccionDerecha = direccionDerecha;
@@ -23,24 +23,24 @@ public class SCANScheduler implements Scheduler {
     public LinkedList<MyProcess> planificar(LinkedList<MyProcess> procesos, int posicionCabezal) {
         LinkedList<MyProcess> orden = new LinkedList<>();
 
-        // Copiar procesos
+        
         LinkedList<MyProcess> pendientes = new LinkedList<>();
         for (int i = 0; i < procesos.size(); i++) {
             pendientes.add(procesos.get(i));
         }
 
-        // Ordenar por bloque objetivo
+        
         ordenarPorBloque(pendientes);
 
         if (direccionDerecha) {
-            // Primero atender los mayores o iguales al cabezal
+            
             for (int i = 0; i < pendientes.size(); i++) {
                 MyProcess p = pendientes.get(i);
                 if (p.getTargetBlock() >= posicionCabezal) {
                     orden.add(p);
                 }
             }
-            // Luego atender los menores
+           
             for (int i = pendientes.size() - 1; i >= 0; i--) {
                 MyProcess p = pendientes.get(i);
                 if (p.getTargetBlock() < posicionCabezal) {
@@ -48,14 +48,14 @@ public class SCANScheduler implements Scheduler {
                 }
             }
         } else {
-            // Primero atender los menores o iguales al cabezal
+            
             for (int i = pendientes.size() - 1; i >= 0; i--) {
                 MyProcess p = pendientes.get(i);
                 if (p.getTargetBlock() <= posicionCabezal) {
                     orden.add(p);
                 }
             }
-            // Luego atender los mayores
+            
             for (int i = 0; i < pendientes.size(); i++) {
                 MyProcess p = pendientes.get(i);
                 if (p.getTargetBlock() > posicionCabezal) {
@@ -67,7 +67,7 @@ public class SCANScheduler implements Scheduler {
         return orden;
     }
 
-    // Método auxiliar para ordenar por bloque objetivo (burbuja simple)
+    
     private void ordenarPorBloque(LinkedList<MyProcess> lista) {
         int n = lista.size();
         for (int i = 0; i < n - 1; i++) {

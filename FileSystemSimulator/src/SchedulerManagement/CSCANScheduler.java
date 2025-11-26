@@ -16,16 +16,16 @@ public class CSCANScheduler implements Scheduler {
     public LinkedList<MyProcess> planificar(LinkedList<MyProcess> procesos, int posicionCabezal) {
         LinkedList<MyProcess> orden = new LinkedList<>();
 
-        // Copiar procesos
+        
         LinkedList<MyProcess> pendientes = new LinkedList<>();
         for (int i = 0; i < procesos.size(); i++) {
             pendientes.add(procesos.get(i));
         }
 
-        // Ordenar por bloque objetivo
+        
         ordenarPorBloque(pendientes);
 
-        // Primero atender los mayores o iguales al cabezal
+        
         for (int i = 0; i < pendientes.size(); i++) {
             MyProcess p = pendientes.get(i);
             if (p.getTargetBlock() >= posicionCabezal) {
@@ -33,7 +33,7 @@ public class CSCANScheduler implements Scheduler {
             }
         }
 
-        // Luego atender los menores (como si el cabezal saltara al inicio)
+        
         for (int i = 0; i < pendientes.size(); i++) {
             MyProcess p = pendientes.get(i);
             if (p.getTargetBlock() < posicionCabezal) {
@@ -44,7 +44,7 @@ public class CSCANScheduler implements Scheduler {
         return orden;
     }
 
-    // Método auxiliar para ordenar por bloque objetivo
+    
     private void ordenarPorBloque(LinkedList<MyProcess> lista) {
         int n = lista.size();
         for (int i = 0; i < n - 1; i++) {

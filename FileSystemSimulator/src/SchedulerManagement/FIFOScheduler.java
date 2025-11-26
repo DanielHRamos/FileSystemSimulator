@@ -15,7 +15,7 @@ public class FIFOScheduler implements Scheduler {
 
     @Override
     public LinkedList<MyProcess> planificar(LinkedList<MyProcess> procesos, int posicionCabezal) {
-        // En FIFO no se reordena: se devuelve tal cual
+        
         return procesos;
     }
 }
